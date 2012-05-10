@@ -22,7 +22,7 @@
 
 # Enkle JavaScript-abstraksjoner
 
-## Et MV*-rammeverk på under 100 linjer JavaScript
+## MV* på under 100 linjer JavaScript
 
 Faggruppemøte
 
@@ -34,41 +34,59 @@ Kim Joar Bekkelund
 
 .middle.center
 
-Det er ikke så vanskelig som man skulle tro.
+Det er overraskende enkelt.
 
 ---
 
 # Hva ønsker vi å oppnå?
 
-Enkle abstraksjoner.
+Enkle abstraksjoner
 
-Separation of concerns. Decoupling.
+Enkelt å forstå, enkelt å endre
 
-Testbarhet.
+Separation of concerns
 
-Enkelt å forstå, enkelt å endre.
+Decoupling
 
-Å luke ut noen dårlige JavaScript-vaner.
+Testbarhet
 
-Forstå Backbone.js, Spine.js og noen andre JS-rammeverk.
+Å luke ut noen dårlige JavaScript-vaner
+
+Forstå Backbone.js (og andre JS-rammeverk)
 
 ---
 
 # MVC / MVP / MV*
 
-Litt begrepsrot og ikke alltid overført til JavaScript-rammeverk.
-
-MVP: Renere separasjon. Ingen kobling mellom views og modeller.
-
-Presenter: user-interface business logic. Mediator mellom views og modeller.
-
-Passive View, i.e. for all intents and purposes "dumb". Altså templates.
+Litt begrepsrot og ikke sjelden overført direkte til JavaScript-rammeverk.
 
 ---
 
-# MVP
+# MVC / MVP / MV*
 
-Kommer til å følge Backbone.js og MVP:
+Litt begrepsrot og ikke sjelden overført direkte til JavaScript-rammeverk.
+
+MVP
+
+---
+
+# MVC / MVP / MV*
+
+Litt begrepsrot og ikke sjelden overført direkte til JavaScript-rammeverk.
+
+MVP
+
+* Renere separasjon
+* Ingen kobling mellom views og modeller
+* Presenter tar seg av "user-interface business logic"
+* Altså, en mediator mellom views og modeller
+* Passive View, i.e. for all intents and purposes "dumb"
+
+---
+
+# Terminologi
+
+Kommer til å følge Backbone.js-terminologi og MVP:
 
 * M = Models
 * P = Views
@@ -80,7 +98,7 @@ Views er da ansvarlig for koordinering av models og templates.
 
 .middle.center
 
-# Simple.js
+# Rammeverk
 
 ---
 
@@ -114,10 +132,51 @@ Initialisering av komponenter ved hjelp av `new`, for eksempel:
     .javascript
     var view = new Simple.View();
 
+---
+
+# Initialisering
+
+Initialisering av komponenter ved hjelp av `new`, for eksempel:
+
+    .javascript
+    var view = new Simple.View();
+
 Dette er JavaScript:
 
     .javascript
     Simple.View = function() {};
+
+---
+
+# Subclassing
+
+Ønsker "subclassing":
+
+    .javascript
+    var UserView = Simple.View.extend({
+
+
+
+    });
+
+    var userView = new UserView();
+    &nbsp;
+
+---
+
+# Subclassing
+
+Ønsker "subclassing":
+
+    .javascript
+    var UserView = Simple.View.extend({
+      test: function() {
+        console.log("TESTING!");
+      }
+    });
+
+    var userView = new UserView();
+    &nbsp;
 
 ---
 
@@ -135,21 +194,196 @@ Dette er JavaScript:
     var userView = new UserView();
     userView.test(); // TESTING!
 
-Mange er kjent med `jQuery.extend`. La oss bruke den:
+---
+
+# Subclassing
+
+Ønsker "subclassing":
+
+    .javascript
+    var UserView = Simple.View.extend({
+      test: function() {
+        console.log("TESTING!");
+      }
+    });
+
+    var userView = new UserView();
+    userView.test(); // TESTING!
+
+Men vi ønsker også at prototype-kjeden er satt opp riktig.
+
+---
+
+# Subclassing
+
+Ønsker "subclassing":
+
+    .javascript
+    var UserView = Simple.View.extend({
+      test: function() {
+        console.log("TESTING!");
+      }
+    });
+
+    var userView = new UserView();
+    userView.test(); // TESTING!
+
+Men vi ønsker også at prototype-kjeden er satt opp riktig.
+
+    .javascript
+    var TwitterUserView = UserView.extend({});
+
+    var view = new TwitterUserView();
+    view.test(); // TESTING!
+
+---
+
+# Subclassing
+
+Denne er 7 linjer, la oss ta et steg om gangen:
 
     .javascript
     Simple.View.extend = function(properties) {
-        var obj = $.extend.call({}, this.prototype, properties);
-        return obj.constructor;
+        var parent = this;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     };
 
-**Viktig!** Dette er enklere å forstå i kodebasen enn å hele veien bruke `$.extend`. Tydeligere intensjon.
+---
+
+# Subclassing
+
+Denne er 7 linjer, la oss ta et steg om gangen:
+
+    .javascript
+    Simple.View.extend = function(properties) {
+        var parent = this;
+
+        // Create child constructor
+        var child = function() {
+            parent.apply(this, arguments);
+        };
+
+
+
+
+
+
+
+
+
+
+        return child;
+    };
+
+---
+
+# Subclassing
+
+Denne er 7 linjer, la oss ta et steg om gangen:
+
+    .javascript
+    Simple.View.extend = function(properties) {
+        var parent = this;
+
+        // Create child constructor
+        var child = function() {
+            parent.apply(this, arguments);
+        };
+
+        // Set the prototype chain to inherit from `parent`
+        child.prototype = Object.create(parent.prototype);
+
+
+
+
+
+
+
+        return child;
+    };
+
+---
+
+# Subclassing
+
+Denne er 7 linjer, la oss ta et steg om gangen:
+
+    .javascript
+    Simple.View.extend = function(properties) {
+        var parent = this;
+
+        // Create child constructor
+        var child = function() {
+            parent.apply(this, arguments);
+        };
+
+        // Set the prototype chain to inherit from `parent`
+        child.prototype = Object.create(parent.prototype);
+
+        // Add prototype properties, i.e.instance properties
+        $.extend(child.prototype, properties);
+
+
+
+
+        return child;
+    };
+
+---
+
+# Subclassing
+
+Denne er 7 linjer, la oss ta et steg om gangen:
+
+    .javascript
+    Simple.View.extend = function(properties) {
+        var parent = this;
+
+        // Create child constructor
+        var child = function() {
+            parent.apply(this, arguments);
+        };
+
+        // Set the prototype chain to inherit from `parent`
+        child.prototype = Object.create(parent.prototype);
+
+        // Add prototype properties, i.e.instance properties
+        $.extend(child.prototype, properties);
+
+        // The child must also be able to create new subclasses
+        child.extend = parent.extend;
+
+        return child;
+    };
 
 ---
 
 # Initialiseringslogikk
 
-Ønsker en `initialize` for barneklasser:
+Ønsker å initialisere subclasser.
+
+---
+
+# Initialiseringslogikk
+
+Ønsker å initialisere subclasser.
+
+Løsning: `initialize`:
 
     .javascript
     var UserView = Simple.View.extend({
@@ -160,7 +394,48 @@ Mange er kjent med `jQuery.extend`. La oss bruke den:
 
     var userView = new UserView(); // starting!
 
-Kan benytte oss av `new`:
+---
+
+# Initialiseringslogikk
+
+Ønsker å initialisere subclasser.
+
+Løsning: `initialize`:
+
+    .javascript
+    var UserView = Simple.View.extend({
+      initialize: function() {
+        console.log("starting!");
+      }
+    });
+
+    var userView = new UserView(); // starting!
+
+Kan benytte oss av "hovedkonstruktøren":
+
+    .javascript
+    Simple.View = function(options) {
+        this.initialize(options);
+    };
+
+---
+
+# Initialiseringslogikk
+
+Ønsker å initialisere subclasser.
+
+Løsning: `initialize`:
+
+    .javascript
+    var UserView = Simple.View.extend({
+      initialize: function() {
+        console.log("starting!");
+      }
+    });
+
+    var userView = new UserView(); // starting!
+
+Kan benytte oss av "hovedkonstruktøren":
 
     .javascript
     Simple.View = function(options) {
@@ -176,8 +451,7 @@ Kan benytte oss av `new`:
     $.extend(Simple.View.prototype, {
         initialize: function() {}
     };
-
-Det er fortsatt greit å bruke `$.extend` internt i "rammeverket".
+    // Husk: Det er greit å bruke `$.extend` internt.
 
 ---
 
@@ -195,15 +469,20 @@ Det er fortsatt greit å bruke `$.extend` internt i "rammeverket".
     });
 
     Simple.View.extend = function(properties) {
-        var obj = $.extend.call({}, this.prototype, properties);
-        return obj.constructor;
+        var parent = this;
+        var child = function() { parent.apply(this, arguments); };
+        child.prototype = Object.create(parent.prototype);
+        $.extend(child.prototype, properties);
+        child.extend = parent.extend;
+        return child;
     };
 
-Veldig enkelt, men vi har allerede:
+Enkle abstraksjoner. Og nå har vi:
 
 * En måte å lage nye views
 * En måte å initialisere nye views
-* En slags separering
+* Enkelt å legge til flere metoder
+* Enklere separering
 
 ---
 
@@ -221,7 +500,55 @@ Veldig enkelt, men vi har allerede:
 
 # HTML-elementet
 
-Når et view initialiseres, får det HTML-elementet sitt, `el`:
+Når et view initialiseres får det HTML-elementet sitt, `el`:
+
+    .javascript
+    var view = new UserView({ el: $(".user") });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    &nbsp;
+
+---
+
+# HTML-elementet
+
+Når et view initialiseres får det HTML-elementet sitt, `el`:
+
+    .javascript
+    var view = new UserView({ el: $(".user") });
+
+    // Vi må koble opp `el`
+
+    var UserView = Simple.View.extend({
+        initialize: function(options) {
+          this.el = options.el;
+        }
+    });
+
+
+
+
+
+
+    &nbsp;
+
+---
+
+# HTML-elementet
+
+Når et view initialiseres får det HTML-elementet sitt, `el`:
 
     .javascript
     var view = new UserView({ el: $(".user") });
@@ -241,13 +568,26 @@ Når et view initialiseres, får det HTML-elementet sitt, `el`:
         this.initialize(options);
     };
 
-    // ... eller eventuelt:
+---
 
-    Simple.View = function(el, options) {
-        this.el = el; // Boyah!
-        this.initialize(options);
+# Nå må vi få rendret noe!
+
+    .javascript
+    // Enkel "modell"
+    var user = {
+      name: "Kim Joar"
     };
-    // men denne er kanskje litt vanskelig å forstå når man bruker `initialize`
+
+    console.log($(".user")); // <div class="user"></div>
+
+    // Sender med avhengigheter
+    var view = new UserView({ el: $(".user"), user: user });
+
+    view.render();
+
+    console.log($(".user")); // <div class="user"><h1>Kim Joar</h1></div>
+    console.log(view.el); // <div class="user"><h1>Kim Joar</h1></div>
+    console.log(view.el.html()); // <h1>Kim Joar</h1>
 
 ---
 
@@ -266,13 +606,14 @@ Når et view initialiseres, får det HTML-elementet sitt, `el`:
 
     view.render();
 
-    console.log(view.el.html()); // <div class="user"><h1>Kim Joar</h1></div>
+    console.log($(".user")); // <div class="user"><h1>Kim Joar</h1></div>
+    console.log(view.el); // <div class="user"><h1>Kim Joar</h1></div>
+    console.log(view.el.html()); // <h1>Kim Joar</h1>
 
 Implementasjon av `UserView`:
 
     .javascript
     var UserView = Simple.View.extend({
-
         template: "<h1>{{name}}</h1>",
 
         initialize: function(options) {
@@ -305,6 +646,22 @@ Nå er det kun rammeverket som vet om Mustache.
 .middle.center
 
 # Det handler om konvensjoner!
+
+---
+
+# Oppslag i DOM-en
+
+Vi har:
+
+    .html
+    <div class="user">
+      <h1>Kim Joar</h1>
+    </div>
+
+Naturlig angrepsmåte for å få tak i overskriften:
+
+    .javascript
+    var header = $(".user h1");
 
 ---
 
@@ -357,13 +714,13 @@ Hvert subview *eier* sitt HTML-element.
         name: "Kim Joar"
     };
 
-    var favorites = [
+    var quotes = [
         "Winter is coming.",
         "A Lannister always pays his debts.",
         "Fear cuts deeper than swords."
     ];
 
-    var userView = new UserView({ el: $(".user"), user: user, favorites: favorites });
+    var userView = new UserView({ el: $(".user"), user: user, quotes: quotes });
 
     userView.render(); // should render both user info and favorite quotes
 
@@ -378,7 +735,7 @@ Hvert subview *eier* sitt HTML-element.
 
         initialize: function(options) {
             this.user = options.user;
-            this.favorites = options.favorites;
+            this.quotes = options.quotes;
         },
 
         render: function() {
@@ -386,8 +743,8 @@ Hvert subview *eier* sitt HTML-element.
             this.renderFavories();
         },
 
-        renderFavories: function() {
-            new FavoritesView({ el: this.DOM(".quotes"), favorites: this.favorites });
+        renderQuotes: function() {
+            new QuotesView({ el: this.DOM(".quotes"), quotes: this.quotes });
         }
 
     });
@@ -396,7 +753,7 @@ Hvert subview *eier* sitt HTML-element.
 
 .middle.center
 
-… more slides to come
+Og det får være nok for idag.
 
 ---
 
@@ -414,7 +771,7 @@ Lett å forstå hva som skjer.
 
 .middle.center
 
-Det er relativt enkelt …
+Poenget er at det er enkelt å lage gode abstraksjoner
 
 ---
 
