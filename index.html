@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Enkle JavaScript-abstraksjoner</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script src="https://github.com/downloads/gnab/remark/remark-0.3.4.min.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://github.com/downloads/kjbekkelund/remark-bekk/bekk-0.0.3.js" type="text/javascript"></script>
+    <link href="https://github.com/downloads/kjbekkelund/remark-bekk/bekk-0.0.3.css" type="text/css" rel="stylesheet">
+    <style type="text/css" media="screen">
+      #slideshow .slide .content.front-page h1 { width: 100%; }
+      .slide p { padding: 0; margin: 1.1em 0; }
+      .slide ul { padding: 0; margin: 1.1em 0; }
+      .slide img { max-width: 100%; max-height: 600px; }
+      #slideshow .slide .content ul li { padding-left: 1.3em; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+.front-page
+
+# Enkle JavaScript-abstraksjoner
+
+## Et MV*-rammeverk på under 100 linjer JavaScript
+
+Faggruppemøte
+
+Kim Joar Bekkelund
+
+11/05/2012
+
+---
+
+.middle.center
+
+Det er ikke så vanskelig som man skulle tro.
+
+---
+
+# Hva ønsker vi å oppnå?
+
+Enkle abstraksjoner.
+
+Separation of concerns. Decoupling.
+
+Testbarhet.
+
+Enkelt å forstå, enkelt å endre.
+
+Å luke ut noen dårlige JavaScript-vaner.
+
+Forstå Backbone.js, Spine.js og noen andre JS-rammeverk.
+
+---
+
+# MVC / MVP / MV*
+
+Litt begrepsrot og ikke alltid overført til JavaScript-rammeverk.
+
+MVP: Renere separasjon. Ingen kobling mellom views og modeller.
+
+Presenter: user-interface business logic. Mediator mellom views og modeller.
+
+Passive View, i.e. for all intents and purposes "dumb". Altså templates.
+
+---
+
+# MVP
+
+Kommer til å følge Backbone.js og MVP:
+
+* M = Models
+* P = Views
+* V = Templates
+
+Views er da ansvarlig for koordinering av models og templates.
+
+---
+
+.middle.center
+
+# Simple.js
+
+---
+
+.middle.center
+
+Not invented here
+
+&nbsp;
+
+---
+
+.middle.center
+
+<s>Not invented here</s>
+
+Proudly found elsewhere
+
+---
+
+# Namespace
+
+    .javascript
+    var Simple = window.Simple = {};
+
+---
+
+# Initialisering
+
+Initialisering av komponenter ved hjelp av `new`, for eksempel:
+
+    .javascript
+    var view = new Simple.View();
+
+Dette er JavaScript:
+
+    .javascript
+    Simple.View = function() {};
+
+---
+
+# Subclassing
+
+Ønsker "subclassing":
+
+    .javascript
+    var UserView = Simple.View.extend({
+      test: function() {
+        console.log("TESTING!");
+      }
+    });
+
+    var userView = new UserView();
+    userView.test(); // TESTING!
+
+Mange er kjent med `jQuery.extend`. La oss bruke den:
+
+    .javascript
+    Simple.View.extend = function(properties) {
+        var obj = $.extend.call({}, this.prototype, properties);
+        return obj.constructor;
+    };
+
+**Viktig!** Dette er enklere å forstå i kodebasen enn å hele veien bruke `$.extend`. Tydeligere intensjon.
+
+---
+
+# Initialiseringslogikk
+
+Ønsker en `initialize` for barneklasser:
+
+    .javascript
+    var UserView = Simple.View.extend({
+      initialize: function() {
+        console.log("starting!");
+      }
+    });
+
+    var userView = new UserView(); // starting!
+
+Kan benytte oss av `new`:
+
+    .javascript
+    Simple.View = function(options) {
+        this.initialize(options);
+    };
+
+    // Tom `initialize` i hovedview-et
+
+    Simple.View.prototype.initialize = function() {};
+
+    // ... eller
+
+    $.extend(Simple.View.prototype, {
+        initialize: function() {}
+    };
+
+Det er fortsatt greit å bruke `$.extend` internt i "rammeverket".
+
+---
+
+# Recap
+
+    .javascript
+    var Simple = window.Simple = {};
+
+    Simple.View = function(options) {
+        this.initialize(options);
+    };
+
+    $.extend(Simple.View.prototype, {
+        initialize: function() {}
+    });
+
+    Simple.View.extend = function(properties) {
+        var obj = $.extend.call({}, this.prototype, properties);
+        return obj.constructor;
+    };
+
+Veldig enkelt, men vi har allerede:
+
+* En måte å lage nye views
+* En måte å initialisere nye views
+* En slags separering
+
+---
+
+.middle.center
+
+# Et view eier et HTML-element
+
+---
+
+.middle.center
+
+![](img/subviews.png)
+
+---
+
+# HTML-elementet
+
+Når et view initialiseres, får det HTML-elementet sitt, `el`:
+
+    .javascript
+    var view = new UserView({ el: $(".user") });
+
+    // Vi må koble opp `el`
+
+    var UserView = Simple.View.extend({
+        initialize: function(options) {
+          this.el = options.el;
+        }
+    });
+
+    // ... men siden vi alltid skal ha med `el`:
+
+    Simple.View = function(options) {
+        this.el = options.el; // Boyah!
+        this.initialize(options);
+    };
+
+    // ... eller eventuelt:
+
+    Simple.View = function(el, options) {
+        this.el = el; // Boyah!
+        this.initialize(options);
+    };
+    // men denne er kanskje litt vanskelig å forstå når man bruker `initialize`
+
+---
+
+# Nå må vi få rendret noe!
+
+    .javascript
+    // Enkel "modell"
+    var user = {
+      name: "Kim Joar"
+    };
+
+    console.log($(".user")); // <div class="user"></div>
+
+    // Sender med avhengigheter
+    var view = new UserView({ el: $(".user"), user: user });
+
+    view.render();
+
+    console.log(view.el.html()); // <div class="user"><h1>Kim Joar</h1></div>
+
+Implementasjon av `UserView`:
+
+    .javascript
+    var UserView = Simple.View.extend({
+
+        template: "<h1>{{name}}</h1>",
+
+        initialize: function(options) {
+            this.user = options.user;
+        },
+
+        render: function() {
+            this.renderTemplate(this.template, this.user);
+        }
+    });
+
+---
+
+# Templates
+
+Og `renderTemplate` er veldig enkel å implementere:
+
+    .javascript
+    $.extend(Simple.View.prototype, {
+        renderTemplate: function(template, data) {
+            var html = Mustache.to_html(template, data);
+            this.el.html(html);
+        }
+    });
+
+Nå er det kun rammeverket som vet om Mustache.
+
+---
+
+.middle.center
+
+# Det handler om konvensjoner!
+
+---
+
+# Oppslag i DOM-en
+
+Vi har:
+
+    .html
+    <div class="user">
+      <h1>Kim Joar</h1>
+    </div>
+
+Naturlig angrepsmåte for å få tak i overskriften:
+
+    .javascript
+    var header = $(".user h1");
+
+Men nå har vi `el` på viewet vårt, hva med dette isteden?
+
+    .javascript
+    var header = userView.DOM("h1");
+
+Og implementasjonen?
+
+    .javascript
+    $.extend(Simple.View.prototype, {
+        DOM: function(selector) {
+            return this.el.find(selector);
+        }
+    });
+
+---
+
+.middle.center
+
+Nå er vi mindre avhengig av DOM-en!
+
+---
+
+# Subviews
+
+Nok en konvensjon.
+
+Hvert subview *eier* sitt HTML-element.
+
+… og de er bare vanlige views.
+
+    .javascript
+    var user = {
+        name: "Kim Joar"
+    };
+
+    var favorites = [
+        "Winter is coming.",
+        "A Lannister always pays his debts.",
+        "Fear cuts deeper than swords."
+    ];
+
+    var userView = new UserView({ el: $(".user"), user: user, favorites: favorites });
+
+    userView.render(); // should render both user info and favorite quotes
+
+---
+
+# Subviews
+
+    .javascript
+    var UserView = Simple.View.extend({
+
+        template: '<h1>{{name}}</h1><ul class="quotes"></ul>',
+
+        initialize: function(options) {
+            this.user = options.user;
+            this.favorites = options.favorites;
+        },
+
+        render: function() {
+            this.renderTemplate(this.template, this.user);
+            this.renderFavories();
+        },
+
+        renderFavories: function() {
+            new FavoritesView({ el: this.DOM(".quotes"), favorites: this.favorites });
+        }
+
+    });
+
+---
+
+.middle.center
+
+… more slides to come
+
+---
+
+# Simple.js
+
+&lt; 100 kodelinjer.
+
+Godt dokumentert.
+
+Lett å forstå hva som skjer.
+
+[http://kjbekkelund.github.com/simple/](http://kjbekkelund.github.com/simple/)
+
+---
+
+.middle.center
+
+Det er relativt enkelt …
+
+---
+
+.middle.center
+
+… men jeg anbefaler å bruke et rammerverk.
+
+    </textarea>
+    <div id="slideshow"></div>
+  </body>
+</html>
