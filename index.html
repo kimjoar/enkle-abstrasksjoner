@@ -58,29 +58,17 @@ Forstå Backbone.js (og andre JS-rammeverk)
 
 # MVC / MVP / MV*
 
-Litt begrepsrot og ikke sjelden overført direkte til JavaScript-rammeverk.
+Litt begrepsrot og sjelden overført direkte til JavaScript-rammeverk.
 
----
+MVP — Model, View, Presenter
 
-# MVC / MVP / MV*
-
-Litt begrepsrot og ikke sjelden overført direkte til JavaScript-rammeverk.
-
-MVP
-
----
-
-# MVC / MVP / MV*
-
-Litt begrepsrot og ikke sjelden overført direkte til JavaScript-rammeverk.
-
-MVP
-
-* Renere separasjon
-* Ingen kobling mellom views og modeller
 * Presenter tar seg av "user-interface business logic"
-* Altså, en mediator mellom views og modeller
+* Ingen kobling mellom views og modeller
+* Altså, presenter er mediator mellom views og modeller
+* Renere separasjon
 * Passive View, i.e. for all intents and purposes "dumb"
+
+Les mer i Addy Osmanis [Learning JavaScript Design Patterns](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#detailmvcmvp).
 
 ---
 
@@ -90,23 +78,15 @@ Kommer til å følge Backbone.js-terminologi og MVP:
 
 * M = Models
 * P = Views
-* V = Templates
+* V = Templates / DOM-en
 
-Views er da ansvarlig for koordinering av models og templates.
+Views er ansvarlig for koordinering.
 
 ---
 
 .middle.center
 
 # Rammeverk
-
----
-
-.middle.center
-
-Not invented here
-
-&nbsp;
 
 ---
 
@@ -132,15 +112,6 @@ Initialisering av komponenter ved hjelp av `new`, for eksempel:
     .javascript
     var view = new Simple.View();
 
----
-
-# Initialisering
-
-Initialisering av komponenter ved hjelp av `new`, for eksempel:
-
-    .javascript
-    var view = new Simple.View();
-
 Dette er JavaScript:
 
     .javascript
@@ -150,39 +121,7 @@ Dette er JavaScript:
 
 # Subclassing
 
-Ønsker "subclassing":
-
-    .javascript
-    var UserView = Simple.View.extend({
-
-
-
-    });
-
-    var userView = new UserView();
-    &nbsp;
-
----
-
-# Subclassing
-
-Ønsker "subclassing":
-
-    .javascript
-    var UserView = Simple.View.extend({
-      test: function() {
-        console.log("TESTING!");
-      }
-    });
-
-    var userView = new UserView();
-    &nbsp;
-
----
-
-# Subclassing
-
-Ønsker "subclassing":
+Ønsker "subclassing", altså å kunne lage nye views med felles funksjonalitet:
 
     .javascript
     var UserView = Simple.View.extend({
@@ -194,43 +133,10 @@ Dette er JavaScript:
     var userView = new UserView();
     userView.test(); // TESTING!
 
----
-
-# Subclassing
-
-Ønsker "subclassing":
+Men vi ønsker også at prototype-kjeden er satt opp riktig, slik at vi kan lage en skikkelig lagdelt arkitektur.
 
     .javascript
-    var UserView = Simple.View.extend({
-      test: function() {
-        console.log("TESTING!");
-      }
-    });
-
-    var userView = new UserView();
-    userView.test(); // TESTING!
-
-Men vi ønsker også at prototype-kjeden er satt opp riktig.
-
----
-
-# Subclassing
-
-Ønsker "subclassing":
-
-    .javascript
-    var UserView = Simple.View.extend({
-      test: function() {
-        console.log("TESTING!");
-      }
-    });
-
-    var userView = new UserView();
-    userView.test(); // TESTING!
-
-Men vi ønsker også at prototype-kjeden er satt opp riktig.
-
-    .javascript
+    // her lager vi ny klasse basert på `UserView`, ikke `Simple.View`
     var TwitterUserView = UserView.extend({});
 
     var view = new TwitterUserView();
@@ -238,111 +144,9 @@ Men vi ønsker også at prototype-kjeden er satt opp riktig.
 
 ---
 
-# Subclassing
+.middle.center
 
-Denne er 7 linjer, la oss ta et steg om gangen:
-
-    .javascript
-    Simple.View.extend = function(properties) {
-        var parent = this;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    };
-
----
-
-# Subclassing
-
-Denne er 7 linjer, la oss ta et steg om gangen:
-
-    .javascript
-    Simple.View.extend = function(properties) {
-        var parent = this;
-
-        // Create child constructor
-        var child = function() {
-            parent.apply(this, arguments);
-        };
-
-
-
-
-
-
-
-
-
-
-        return child;
-    };
-
----
-
-# Subclassing
-
-Denne er 7 linjer, la oss ta et steg om gangen:
-
-    .javascript
-    Simple.View.extend = function(properties) {
-        var parent = this;
-
-        // Create child constructor
-        var child = function() {
-            parent.apply(this, arguments);
-        };
-
-        // Set the prototype chain to inherit from `parent`
-        child.prototype = Object.create(parent.prototype);
-
-
-
-
-
-
-
-        return child;
-    };
-
----
-
-# Subclassing
-
-Denne er 7 linjer, la oss ta et steg om gangen:
-
-    .javascript
-    Simple.View.extend = function(properties) {
-        var parent = this;
-
-        // Create child constructor
-        var child = function() {
-            parent.apply(this, arguments);
-        };
-
-        // Set the prototype chain to inherit from `parent`
-        child.prototype = Object.create(parent.prototype);
-
-        // Add prototype properties, i.e.instance properties
-        $.extend(child.prototype, properties);
-
-
-
-
-        return child;
-    };
+![](img/prototype-chain.png)
 
 ---
 
@@ -377,13 +181,8 @@ Denne er 7 linjer, la oss ta et steg om gangen:
 
 Ønsker å initialisere subclasser.
 
----
-
-# Initialiseringslogikk
-
-Ønsker å initialisere subclasser.
-
-Løsning: `initialize`:
+Løsning: gjør det mulig å lage en `initialize`-metode som blir kalt hver gang
+et view initialiseres.
 
     .javascript
     var UserView = Simple.View.extend({
@@ -398,51 +197,16 @@ Løsning: `initialize`:
 
 # Initialiseringslogikk
 
-Ønsker å initialisere subclasser.
-
-Løsning: `initialize`:
-
-    .javascript
-    var UserView = Simple.View.extend({
-      initialize: function() {
-        console.log("starting!");
-      }
-    });
-
-    var userView = new UserView(); // starting!
-
-Kan benytte oss av "hovedkonstruktøren":
+Legger til `initialize` ved å benytte "hovedkonstruktøren":
 
     .javascript
     Simple.View = function(options) {
+        // vi legger altså til funksjonalitet i `Simple.View` som alltid
+        // brukes for å initialisere et view
         this.initialize(options);
     };
 
----
-
-# Initialiseringslogikk
-
-Ønsker å initialisere subclasser.
-
-Løsning: `initialize`:
-
-    .javascript
-    var UserView = Simple.View.extend({
-      initialize: function() {
-        console.log("starting!");
-      }
-    });
-
-    var userView = new UserView(); // starting!
-
-Kan benytte oss av "hovedkonstruktøren":
-
-    .javascript
-    Simple.View = function(options) {
-        this.initialize(options);
-    };
-
-    // Tom `initialize` i hovedview-et
+    // Tom `initialize` i hovedview-et som default-verdi
 
     Simple.View.prototype.initialize = function() {};
 
@@ -451,6 +215,7 @@ Kan benytte oss av "hovedkonstruktøren":
     $.extend(Simple.View.prototype, {
         initialize: function() {}
     };
+
     // Husk: Det er greit å bruke `$.extend` internt.
 
 ---
@@ -500,36 +265,13 @@ Enkle abstraksjoner. Og nå har vi:
 
 # HTML-elementet
 
-Når et view initialiseres får det HTML-elementet sitt, `el`:
+Når et view initialiseres sender vi inn HTML-elementet det er ansvarlig for:
 
     .javascript
-    var view = new UserView({ el: $(".user") });
+    var el = $(".user"); // HTML-elementet!
+    var view = new UserView({ el: el });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    &nbsp;
-
----
-
-# HTML-elementet
-
-Når et view initialiseres får det HTML-elementet sitt, `el`:
-
-    .javascript
-    var view = new UserView({ el: $(".user") });
-
-    // Vi må koble opp `el`
+    // Vi må koble opp `el`, slik at det er tilgjengelig i viewet
 
     var UserView = Simple.View.extend({
         initialize: function(options) {
@@ -537,57 +279,14 @@ Når et view initialiseres får det HTML-elementet sitt, `el`:
         }
     });
 
-
-
-
-
-
-    &nbsp;
-
----
-
-# HTML-elementet
-
-Når et view initialiseres får det HTML-elementet sitt, `el`:
-
-    .javascript
-    var view = new UserView({ el: $(".user") });
-
-    // Vi må koble opp `el`
-
-    var UserView = Simple.View.extend({
-        initialize: function(options) {
-          this.el = options.el;
-        }
-    });
-
-    // ... men siden vi alltid skal ha med `el`:
+    // ... men siden vi alltid skal ha med `el` kan vi igjen
+    // bruke "hovedkonstruktøren", så slipper vi å gjøre det
+    // på nytt i hvert eneste view
 
     Simple.View = function(options) {
         this.el = options.el; // Boyah!
         this.initialize(options);
     };
-
----
-
-# Nå må vi få rendret noe!
-
-    .javascript
-    // Enkel "modell"
-    var user = {
-      name: "Kim Joar"
-    };
-
-    console.log($(".user")); // <div class="user"></div>
-
-    // Sender med avhengigheter
-    var view = new UserView({ el: $(".user"), user: user });
-
-    view.render();
-
-    console.log($(".user")); // <div class="user"><h1>Kim Joar</h1></div>
-    console.log(view.el); // <div class="user"><h1>Kim Joar</h1></div>
-    console.log(view.el.html()); // <h1>Kim Joar</h1>
 
 ---
 
@@ -621,7 +320,7 @@ Implementasjon av `UserView`:
         },
 
         render: function() {
-            this.renderTemplate(this.template, this.user);
+            this.renderTemplate(this.user);
         }
     });
 
@@ -633,8 +332,8 @@ Og `renderTemplate` er veldig enkel å implementere:
 
     .javascript
     $.extend(Simple.View.prototype, {
-        renderTemplate: function(template, data) {
-            var html = Mustache.to_html(template, data);
+        renderTemplate: function(data) {
+            var html = Mustache.to_html(this.template, data);
             this.el.html(html);
         }
     });
@@ -646,22 +345,6 @@ Nå er det kun rammeverket som vet om Mustache.
 .middle.center
 
 # Det handler om konvensjoner!
-
----
-
-# Oppslag i DOM-en
-
-Vi har:
-
-    .html
-    <div class="user">
-      <h1>Kim Joar</h1>
-    </div>
-
-Naturlig angrepsmåte for å få tak i overskriften:
-
-    .javascript
-    var header = $(".user h1");
 
 ---
 
@@ -739,7 +422,7 @@ Hvert subview *eier* sitt HTML-element.
         },
 
         render: function() {
-            this.renderTemplate(this.template, this.user);
+            this.renderTemplate(this.user);
             this.renderFavories();
         },
 
@@ -754,6 +437,75 @@ Hvert subview *eier* sitt HTML-element.
 .middle.center
 
 Og det får være nok for idag.
+
+---
+
+# Koden
+
+    .javascript
+    var Simple = window.Simple = {};
+
+    Simple.View = function(options) {
+        this.initialize(options);
+    };
+
+    $.extend(Simple.View.prototype, {
+        initialize: function() {},
+
+        renderTemplate: function(data) {
+            var html = Mustache.to_html(this.template, data);
+            this.el.html(html);
+        },
+
+        DOM: function(selector) {
+            return this.el.find(selector);
+        }
+    });
+
+    Simple.View.extend = function(properties) {
+        var parent = this;
+        var child = function() { parent.apply(this, arguments); };
+        child.prototype = Object.create(parent.prototype);
+        $.extend(child.prototype, properties);
+        child.extend = parent.extend;
+        return child;
+    };
+
+---
+
+# Ideer til utvidelse
+
+Eventdelegering:
+
+    .javascript
+    var UserView = Simple.View.extend({
+          events: {
+              "click .user": "showUser"
+          },
+
+          showUser: function(event) {
+              // `this` er som forventet
+          }
+    });
+
+Elementer:
+
+    .javascript
+    var UserView = Simple.View.extend({
+          elements: {
+              "form input[type=text]": "input"
+          },
+
+          render: function(event) {
+              this.input.val("test");
+          }
+    });
+
+---
+
+.middle.center
+
+Les [JavaScript Web Applications](http://shop.oreilly.com/product/0636920018421.do)
 
 ---
 
